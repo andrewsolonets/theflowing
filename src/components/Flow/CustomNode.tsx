@@ -7,10 +7,12 @@ import { useReactFlow } from "reactflow";
 import { NodeToolbar } from "reactflow";
 import { Handle, Position } from "reactflow";
 import EditableText from "../EditableText";
+import uuid from "react-uuid";
 
 const CustomNode: FC<NodeProps> = ({ data, id }) => {
   const instance = useReactFlow();
   const node = instance.getNode(id);
+  console.log(node);
 
   return (
     <>
@@ -32,11 +34,19 @@ const CustomNode: FC<NodeProps> = ({ data, id }) => {
           >
             delete
           </button>
-          <button>copy</button>
+          <button
+            onClick={() => {
+              if (node) {
+                instance.addNodes({ ...node, id: uuid() });
+              }
+            }}
+          >
+            copy
+          </button>
           <button>expand</button>
         </NodeToolbar>
         <div className="relative">
-          <EditableText isOpen={false} />
+          <EditableText isOpen={false} instance={instance} node={node} />
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import { api } from "../utils/api";
 import "reactflow/dist/style.css";
 
 import "../styles/globals.css";
+import { ReactFlowProvider } from "reactflow";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -14,7 +15,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <ReactFlowProvider>
+        <Component {...pageProps} />
+      </ReactFlowProvider>
     </SessionProvider>
   );
 };

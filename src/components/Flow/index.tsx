@@ -1,5 +1,10 @@
-import { useCallback, useState } from "react";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { useCallback, useEffect, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import type { Node, Connection, Edge } from "reactflow";
+import { useEdges } from "reactflow";
+import { useReactFlow } from "reactflow";
 import ReactFlow, {
   useNodesState,
   useEdgesState,
@@ -11,6 +16,9 @@ import ReactFlow, {
 } from "reactflow";
 import CustomNode from "./CustomNode";
 import Parallelogram from "./Shapes/Parallelogram";
+import { api } from "../../utils/api";
+import type { UserData } from "@prisma/client";
+import { useRouter } from "next/router";
 
 const defaultNodeStyle = {
   border: "2px solid #ff0071",
@@ -67,13 +75,51 @@ const defaultEdgeOptions = {
   type: "smoothstep",
 };
 
-function Flow() {
+function Flow({ dataInit }: { dataInit: UserData }) {
+  const router = useRouter();
+  const { id } = router.query;
+  const { data: sessionData } = useSession();
+  const userId = sessionData?.user.id;
+  const dataMutation = api.flow.postUserData.useMutation();
+  const updMutation = api.flow.updateFlow.useMutation();
+  const { data } = api.flow.getUserFlows.useQuery();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  console.log(nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const onConnect = useCallback(
     (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
+  const edges1 = useEdges();
+
+  useEffect(() => {
+    if (dataInit && dataInit?.nodes && dataInit?.edges) {
+      //@ts-expect-error
+      setNodes(JSON.parse(dataInit.nodes));
+      //@ts-expect-error
+      setEdges(JSON.parse(dataInit.edges));
+    }
+  }, [dataInit, setEdges, setNodes]);
+
+  useEffect(() => {
+    console.log(edges1);
+  }, [edges1]);
+
+  const getFlow = () => {
+    if (data && data?.at(-1) && data?.at(-1)?.nodes && data.at(-1)?.edges) {
+      console.log("get attempt");
+      console.log(data.at(-1));
+      //@ts-expect-error
+      setNodes(JSON.parse(data.at(-1).nodes as string));
+      //@ts-expect-error
+      setEdges(JSON.parse(data.at(-1).edges as string));
+    }
+  };
+
+  const instance = useReactFlow();
+  const nodesJson = JSON.stringify(instance.getNodes());
+  const edgesJson = JSON.stringify(instance.getEdges());
+  console.log(edgesJson);
 
   return (
     <div className=" h-screen w-screen flex-grow text-xs">
@@ -90,7 +136,7 @@ function Flow() {
       >
         <Background />
         <Controls />
-        <Panel position="bottom-center">
+        <Panel position="bottom-center" className="flex gap-2">
           <button
             onClick={() =>
               setNodes((prev) => {
@@ -110,6 +156,41 @@ function Flow() {
             }
           >
             Test
+          </button>
+          <button
+            onClick={() => {
+              if (userId) {
+                dataMutation.mutate({
+                  userId,
+                  nodes: nodesJson,
+                  edges: edgesJson,
+                });
+              }
+            }}
+          >
+            send data
+          </button>
+          <button
+            onClick={() => {
+              updMutation.mutate({
+                //@ts-expect-error
+                id,
+                nodes: nodesJson,
+                edges: edgesJson,
+              });
+            }}
+          >
+            Update Data
+          </button>
+          <button onClick={() => getFlow()}>Get data</button>
+        </Panel>
+        <Panel position="top-right">
+          <button
+            className="outline-amber  w-max rounded-sm bg-transparent px-3 py-1 text-amber-400 outline outline-2 transition-all duration-300 hover:bg-amber-400/20 hover:bg-opacity-10 md:px-4"
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={sessionData ? () => signOut() : () => signIn()}
+          >
+            {sessionData ? "Sign out" : "Sign in"}
           </button>
         </Panel>
       </ReactFlow>

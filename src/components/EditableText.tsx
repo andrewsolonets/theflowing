@@ -1,45 +1,51 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import React from "react";
+import type { FC } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ContentEditable from "react-contenteditable";
+import type { Node, ReactFlowInstance } from "reactflow";
 
 type MyProps = {
   // using `interface` is also ok
   isOpen: boolean;
+  instance: ReactFlowInstance<any, any>;
+  node: Node<any, string | undefined> | undefined;
 };
 
-type MyState = {
-  // using `interface` is also ok
-  html: string;
-};
+const EditableText: FC<MyProps> = ({ isOpen, instance, node }) => {
+  const [state, setState] = useState("Edit");
+  const contentEditable = useRef();
 
-class EditableText extends React.Component<MyProps, MyState> {
-  contentEditable: React.RefObject<HTMLElement>;
-  constructor() {
-    //@ts-expect-error
-    super();
-    this.contentEditable = React.createRef();
-    this.state = { html: "Edit!" };
-  }
+  useEffect(() => {
+    setState(node?.data.label as string);
+  }, [node]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleChange = (evt: any) => {
+  const handleChange = (evt: any) => {
     console.log(evt);
-    this.setState({ html: evt.target.value });
+    setState(evt.target.value as string);
+    instance.setNodes((prev) => {
+      const otherNodes = prev.filter((el) => el.id !== node?.id);
+      return [
+        ...otherNodes,
+        {
+          ...(node as Node),
+          data: { label: evt.target.value as string },
+        },
+      ];
+    });
   };
 
-  render = () => {
-    return (
-      <ContentEditable
-        innerRef={this.contentEditable}
-        className="min-w-[10px] outline-none"
-        html={this.state.html} // innerHTML of the editable div
-        disabled={this.props.isOpen} // use true to disable edition
-        onChange={this.handleChange} // handle innerHTML change
-      />
-    );
-  };
-}
+  return (
+    <ContentEditable
+      innerRef={contentEditable.current}
+      className="min-w-[10px] outline-none"
+      html={state} // innerHTML of the editable div
+      disabled={isOpen} // use true to disable edition
+      onChange={handleChange} // handle innerHTML change
+    />
+  );
+};
 
 export default EditableText;
