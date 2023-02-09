@@ -7,16 +7,17 @@ export const flowRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
+        name: z.string(),
         nodes: z.string(),
         edges: z.string(),
       })
     )
     .mutation(({ ctx, input }) => {
-      const { userId, nodes, edges } = input;
+      const { userId, nodes, edges, name } = input;
       return ctx.prisma.userData.create({
         data: {
           user: { connect: { id: userId } },
-
+          name,
           nodes,
           edges,
         },
@@ -35,14 +36,22 @@ export const flowRouter = createTRPCRouter({
     });
   }),
   updateFlow: publicProcedure
-    .input(z.object({ id: z.string(), nodes: z.string(), edges: z.string() }))
+    .input(
+      z.object({
+        id: z.string(),
+        nodes: z.string(),
+        edges: z.string(),
+        name: z.string(),
+      })
+    )
     .mutation(({ ctx, input }) => {
-      const { id, nodes, edges } = input;
+      const { id, nodes, edges, name } = input;
       return ctx.prisma.userData.update({
         where: { id },
         data: {
           nodes,
           edges,
+          name,
         },
       });
     }),

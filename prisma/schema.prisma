@@ -16,9 +16,10 @@ datasource db {
 }
 
 model UserData {
-    id     String @id @default(cuid())
-    user   User   @relation(fields: [userId], references: [id])
-    userId String
+    id     String  @id @default(cuid())
+    user   User?   @relation(fields: [userId], references: [id])
+    name   String?
+    userId String?
     nodes  Json
     edges  Json
 

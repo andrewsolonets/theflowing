@@ -20,8 +20,8 @@ const Home: NextPage = () => {
           {data?.map((el) => {
             return (
               <Link href={`/flow/${el.id}`} key={el.id}>
-                <div className="h-64 w-64 bg-violet-400">
-                  <h5>{el.id}</h5>
+                <div className="flex h-64 w-64 flex-col items-center justify-center bg-violet-400">
+                  <h5 className="text-2xl">{el.name}</h5>
                 </div>
               </Link>
             );

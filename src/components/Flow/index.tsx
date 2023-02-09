@@ -19,6 +19,8 @@ import Parallelogram from "./Shapes/Parallelogram";
 import { api } from "../../utils/api";
 import type { UserData } from "@prisma/client";
 import { useRouter } from "next/router";
+import Link from "next/link";
+import EditableTitle from "../EditableTitle";
 
 const defaultNodeStyle = {
   border: "2px solid #ff0071",
@@ -76,6 +78,7 @@ const defaultEdgeOptions = {
 };
 
 function Flow({ dataInit }: { dataInit: UserData }) {
+  const [name, setName] = useState("Untitled");
   const router = useRouter();
   const { id } = router.query;
   const { data: sessionData } = useSession();
@@ -91,6 +94,7 @@ function Flow({ dataInit }: { dataInit: UserData }) {
     [setEdges]
   );
   const edges1 = useEdges();
+  console.log(dataInit);
 
   useEffect(() => {
     if (dataInit && dataInit?.nodes && dataInit?.edges) {
@@ -98,8 +102,13 @@ function Flow({ dataInit }: { dataInit: UserData }) {
       setNodes(JSON.parse(dataInit.nodes));
       //@ts-expect-error
       setEdges(JSON.parse(dataInit.edges));
+    } else if (id === "new") {
+      console.log("new");
     }
-  }, [dataInit, setEdges, setNodes]);
+    if (dataInit?.name) {
+      setName(dataInit.name);
+    }
+  }, [dataInit, setEdges, setNodes, id]);
 
   useEffect(() => {
     console.log(edges1);
@@ -157,34 +166,42 @@ function Flow({ dataInit }: { dataInit: UserData }) {
           >
             Test
           </button>
+
+          {/* <button onClick={() => getFlow()}>Get data</button> */}
+        </Panel>
+        <Panel position="top-left" className="flex items-center gap-2">
+          <Link
+            href={"/"}
+            className="outline-amber  w-max rounded-sm bg-transparent px-3 py-1 text-amber-400 outline outline-2 transition-all duration-300 hover:bg-amber-400/20 hover:bg-opacity-10 md:px-4"
+          >
+            Back
+          </Link>
+          <EditableTitle name={name} setName={setName} className="text-xl" />
+        </Panel>
+        <Panel position="top-right" className="flex gap-2">
           <button
+            className="outline-amber  w-max rounded-sm bg-transparent px-3 py-1 text-amber-400 outline outline-2 transition-all duration-300 hover:bg-amber-400/20 hover:bg-opacity-10 md:px-4"
             onClick={() => {
-              if (userId) {
+              if (dataInit) {
+                updMutation.mutate({
+                  //@ts-expect-error
+                  id,
+                  name,
+                  nodes: nodesJson,
+                  edges: edgesJson,
+                });
+              } else if (userId) {
                 dataMutation.mutate({
                   userId,
+                  name,
                   nodes: nodesJson,
                   edges: edgesJson,
                 });
               }
             }}
           >
-            send data
+            Save
           </button>
-          <button
-            onClick={() => {
-              updMutation.mutate({
-                //@ts-expect-error
-                id,
-                nodes: nodesJson,
-                edges: edgesJson,
-              });
-            }}
-          >
-            Update Data
-          </button>
-          <button onClick={() => getFlow()}>Get data</button>
-        </Panel>
-        <Panel position="top-right">
           <button
             className="outline-amber  w-max rounded-sm bg-transparent px-3 py-1 text-amber-400 outline outline-2 transition-all duration-300 hover:bg-amber-400/20 hover:bg-opacity-10 md:px-4"
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
