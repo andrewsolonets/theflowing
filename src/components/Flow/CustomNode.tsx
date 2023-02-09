@@ -43,7 +43,9 @@ const CustomNode: FC<NodeProps> = ({ data, id }) => {
           >
             copy
           </button>
-          <button>expand</button>
+          {/* <button onClick={() => {
+            instance.
+          }}>expand</button> */}
         </NodeToolbar>
         <div className="relative">
           <EditableText isOpen={false} instance={instance} node={node} />

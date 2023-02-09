@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import type { Node, Connection, Edge } from "reactflow";
 import { useEdges } from "reactflow";
@@ -21,6 +22,8 @@ import type { UserData } from "@prisma/client";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import EditableTitle from "../EditableTitle";
+import uuid from "react-uuid";
+import { toast } from "react-toastify";
 
 const defaultNodeStyle = {
   border: "2px solid #ff0071",
@@ -79,6 +82,8 @@ const defaultEdgeOptions = {
 
 function Flow({ dataInit }: { dataInit: UserData }) {
   const [name, setName] = useState("Untitled");
+  const flowRef = useRef<HTMLDivElement>(null);
+  const [nodeCreate, setNodeCreate] = useState({ isCreating: false, type: "" });
   const router = useRouter();
   const { id } = router.query;
   const { data: sessionData } = useSession();
@@ -94,6 +99,7 @@ function Flow({ dataInit }: { dataInit: UserData }) {
     [setEdges]
   );
   const edges1 = useEdges();
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
   console.log(dataInit);
 
   useEffect(() => {
@@ -128,14 +134,53 @@ function Flow({ dataInit }: { dataInit: UserData }) {
   const instance = useReactFlow();
   const nodesJson = JSON.stringify(instance.getNodes());
   const edgesJson = JSON.stringify(instance.getEdges());
-  console.log(edgesJson);
+  const reactFlowBounds = flowRef?.current?.getBoundingClientRect();
 
   return (
-    <div className=" h-screen w-screen flex-grow text-xs">
+    <div
+      className=" h-screen w-screen flex-grow text-xs"
+      onMouseMove={(e) => {
+        if (nodeCreate.isCreating) {
+          setMouse({ x: e.clientX, y: e.clientY });
+        }
+      }}
+    >
+      {nodeCreate.isCreating && (
+        <button
+          onClick={() => {
+            const position = instance.project({
+              x: mouse.x - reactFlowBounds!.left - 40,
+              y: mouse.y - reactFlowBounds!.top - 40,
+            });
+            // console.log();
+            instance.addNodes({
+              id: uuid(),
+              data: { label: "Text" },
+              position: position,
+              type: "custom",
+
+              style:
+                nodeCreate.type === "round"
+                  ? defaultNodeStyle
+                  : nodeCreate.type === "rect"
+                  ? rectNodeStyle
+                  : defaultNodeStyle,
+              className: `px-8 py-2 ${
+                nodeCreate.type === "round" ? "rounded-full" : ""
+              } `,
+            });
+
+            setNodeCreate({ isCreating: false, type: "" });
+          }}
+          className="absolute z-[999] h-20 w-40 rounded-sm bg-emerald-500"
+          style={{ left: mouse.x - 40, top: mouse.y - 40 }}
+        ></button>
+      )}
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
         edges={edges}
+        ref={flowRef}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
@@ -145,7 +190,7 @@ function Flow({ dataInit }: { dataInit: UserData }) {
       >
         <Background />
         <Controls />
-        <Panel position="bottom-center" className="flex gap-2">
+        <Panel position="bottom-center" className="flex gap-6">
           <button
             onClick={() =>
               setNodes((prev) => {
@@ -166,6 +211,16 @@ function Flow({ dataInit }: { dataInit: UserData }) {
           >
             Test
           </button>
+
+          <div
+            onClick={() => setNodeCreate({ isCreating: true, type: "rect" })}
+            className="h-20 w-40 rounded-sm bg-emerald-500"
+          ></div>
+
+          <button
+            onClick={() => setNodeCreate({ isCreating: true, type: "round" })}
+            className="h-20 w-40 rounded-full bg-emerald-500"
+          ></button>
 
           {/* <button onClick={() => getFlow()}>Get data</button> */}
         </Panel>
@@ -190,6 +245,7 @@ function Flow({ dataInit }: { dataInit: UserData }) {
                   nodes: nodesJson,
                   edges: edgesJson,
                 });
+                toast.success("Flow saved!");
               } else if (userId) {
                 dataMutation.mutate({
                   userId,
@@ -197,6 +253,7 @@ function Flow({ dataInit }: { dataInit: UserData }) {
                   nodes: nodesJson,
                   edges: edgesJson,
                 });
+                toast.success("Flow saved!");
               }
             }}
           >
