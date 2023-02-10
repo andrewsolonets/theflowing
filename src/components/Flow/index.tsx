@@ -182,7 +182,7 @@ function Flow({ dataInit }: { dataInit: UserData | null }) {
           }}
           className={`absolute z-[999] h-20 w-40 ${
             nodeCreate.type === "round" ? "rounded-full" : "rounded-sm"
-          }  bg-emerald-500`}
+          }  bg-violet-500`}
           style={{ left: mouse.x - 40, top: mouse.y - 40 }}
         ></button>
       )}
