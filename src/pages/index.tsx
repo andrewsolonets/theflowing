@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import AddIcon from "../../public/static/img/AddIcon";
 
 import { Header } from "../components/Header";
+import { useMainCtx } from "../context/MainCtx";
 import { api } from "../utils/api";
 
 const Home: NextPage = () => {
   const { data } = api.flow.getUserFlows.useQuery();
+  const { localData } = useMainCtx();
+
   return (
     <>
       <Head>
@@ -16,8 +21,22 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex min-h-screen w-full flex-col items-center justify-center">
         <Header />
-        <div className="flex w-full justify-between">
+        <div className="mt-20 grid grid-cols-3 gap-4">
+          <Link href={"/flow/new"}>
+            <div className="flex h-64 w-64 flex-col items-center justify-center bg-violet-400">
+              <AddIcon className="h-16 w-16 fill-violet-900" />
+            </div>
+          </Link>
           {data?.map((el) => {
+            return (
+              <Link href={`/flow/${el.id}`} key={el.id}>
+                <div className="flex h-64 w-64 flex-col items-center justify-center bg-violet-400">
+                  <h5 className="text-2xl">{el.name}</h5>
+                </div>
+              </Link>
+            );
+          })}
+          {localData.map((el) => {
             return (
               <Link href={`/flow/${el.id}`} key={el.id}>
                 <div className="flex h-64 w-64 flex-col items-center justify-center bg-violet-400">

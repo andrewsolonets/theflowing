@@ -39,8 +39,11 @@ const EditableText: FC<MyProps> = ({ isOpen, instance, node }) => {
 
   return (
     <ContentEditable
+      onClick={(e) => {
+        console.log(e);
+      }}
       innerRef={contentEditable.current}
-      className="min-w-[10px] outline-none"
+      className="z-[999] min-w-[10px] outline-none"
       html={state} // innerHTML of the editable div
       disabled={isOpen} // use true to disable edition
       onChange={handleChange} // handle innerHTML change

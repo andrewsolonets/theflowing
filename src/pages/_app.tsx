@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
@@ -10,6 +11,7 @@ import "../styles/globals.css";
 
 import { ReactFlowProvider } from "reactflow";
 import { ToastContainer } from "react-toastify";
+import { MainProvider } from "../context/MainCtx";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -17,19 +19,21 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <ReactFlowProvider>
-        <Component {...pageProps} />
-        <ToastContainer
-          position="bottom-right"
-          autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          theme="colored"
-        />
-      </ReactFlowProvider>
+      <MainProvider>
+        <ReactFlowProvider>
+          <Component {...pageProps} />
+          <ToastContainer
+            position="bottom-right"
+            autoClose={1500}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            theme="colored"
+          />
+        </ReactFlowProvider>
+      </MainProvider>
     </SessionProvider>
   );
 };
